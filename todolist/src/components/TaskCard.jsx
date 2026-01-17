@@ -8,8 +8,9 @@ const STATUS_LABEL = {
 const STATUS_COLORS = {
   todo: 'bg-yellow-100 text-yellow-800',
   doing: 'bg-blue-100 text-blue-800',
-  done: 'bg-green-100 text-green-800',
+  done: 'bg-green-100 text-green-800', 
 };
+
 
 export default function TaskCard({ task, onChangeStatus }) {
   return (
