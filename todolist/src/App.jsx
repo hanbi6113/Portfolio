@@ -3,23 +3,27 @@ import TaskInput from './components/TaskInput';
 import TaskFilter from './components/TaskFilter';
 import TaskList from './components/TaskList';
 
+const SORT_OPTIONS = {
+  status: '기본순',
+  added: '추가순',
+  alphabet: '가나다순',
+  reverse: '역순',
+};
+
 function App() {
   const [tasks, setTasks] = useState([]);
   const [filter, setFilter] = useState('all');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
-  const [sort, setSort] = useState('added');
+  const [sort, setSort] = useState('status'); // 기본 분류순
 
   // 초기 로딩 (3초 게이지)
   useEffect(() => {
     let value = 0;
-
     const interval = setInterval(() => {
-      value += 2; // 2%씩 증가 → 약 3초
+      value += 2;
       setProgress(value);
-
       if (value >= 100) {
         clearInterval(interval);
         setTasks([
@@ -36,80 +40,36 @@ function App() {
 
   // 작업 추가
   const addTask = (title) => {
-    if (!title.trim()) {
-      alert('작업 내용을 입력하세요.');
-      return;
-    }
-
-    setTasks(prev => [
-      ...prev,
-      { id: Date.now(), title, status: 'todo' },
-    ]);
+    if (!title.trim()) return alert('작업 내용을 입력하세요.');
+    setTasks(prev => [...prev, { id: Date.now(), title, status: 'todo' }]);
   };
 
   // 상태 변경
   const changeStatus = (id, status) => {
-    setTasks(prev =>
-      prev.map(task =>
-        task.id === id ? { ...task, status } : task
-      )
-    );
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, status } : t));
   };
 
   // 필터 + 검색
   const filteredTasks = tasks
-    .filter(task => (filter === 'all' ? true : task.status === filter))
-    .filter(task =>
-      task.title.toLowerCase().includes(search.toLowerCase())
-    );
+    .filter(task => filter === 'all' ? true : task.status === filter)
+    .filter(task => task.title.toLowerCase().includes(search.toLowerCase()));
 
-  // 🔹 로딩 UI (게이지 + 중앙 정렬)
+  // 로딩 UI
   if (loading) {
     return (
       <div className="fixed inset-0 flex flex-col items-center justify-center gap-6">
         <p className="text-4xl font-bold">로딩 중...</p>
-
         <div className="w-64 h-3 bg-gray-200 rounded overflow-hidden">
-          <div
-            className="h-full bg-black transition-all"
-            style={{ width: `${progress}%` }}
-          />
+          <div className="h-full bg-black transition-all" style={{ width: `${progress}%` }} />
         </div>
-
         <span className="text-sm text-gray-500">{progress}%</span>
-      </div>
-    );
-  }
-
-  // 에러 UI
-  if (error) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="p-6 border rounded text-center">
-          <p className="mb-4">에러가 발생했습니다. 다시 시도해 주세요.</p>
-          <button
-            className="px-4 py-2 rounded bg-gray-800 text-white"
-            onClick={() => setError(false)}
-          >
-            다시 시도
-          </button>
-        </div>
       </div>
     );
   }
 
   return (
     <div className="max-w-[480px] mx-auto p-4">
-      <h1 className="text-4xl font-bold text-center mb-6">
-        Todo List
-      </h1>
-
-      <button
-        className="mb-4 w-full py-2 rounded bg-red-500 text-white"
-        onClick={() => setError(true)}
-      >
-        에러 발생
-      </button>
+      <h1 className="text-4xl font-bold text-center mb-6">Todo List</h1>
 
       <TaskInput onAdd={addTask} />
 
@@ -122,10 +82,22 @@ function App() {
 
       <TaskFilter current={filter} onChange={setFilter} />
 
+      {/* 🔹 정렬 드롭다운 */}
+      <select
+        className="w-full my-3 p-2 border rounded"
+        value={sort}
+        onChange={e => setSort(e.target.value)}
+      >
+        {Object.entries(SORT_OPTIONS).map(([key, label]) => (
+          <option key={key} value={key}>{label}</option>
+        ))}
+      </select>
+
       <TaskList
         tasks={filteredTasks}
         onChangeStatus={changeStatus}
         currentFilter={filter}
+        sort={sort}
       />
     </div>
   );
